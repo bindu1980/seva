@@ -1,0 +1,16 @@
+let U=guard('volunteer');header();
+function render(){
+ const mine=S.regs.filter(r=>r.vol==U.name),h=hours(U.name),bd=badge(h)+' volunteer';
+ $('#app').innerHTML=`<h2>Welcome, ${esc(U.name)}</h2><p class="meta">Your volunteering at a glance.</p>
+ <div class="stats"><div class="card stat"><b>${h}</b><span>Hours volunteered</span></div><div class="card stat"><b>${mine.filter(r=>r.pr).length}</b><span>Events attended</span></div><div class="card stat"><b>${mine.length}</b><span>Registrations</span></div><div class="card stat"><b style="font-size:22px;padding:6px 0">${bd}</b><span>Current badge</span></div></div>
+ <div class="two"><div class="card tw"><h3>My events</h3>${mine.length?`<table><tr><th>Event</th><th>Date</th><th>Status</th><th>Hours</th><th></th></tr>${mine.map(r=>{const e=ev(r.ev);return `<tr><td>${esc(e.title)}</td><td>${fmt(e.date)}</td><td>${e.cancelled?'<span class="tag b">event cancelled</span>':`<span class="tag ${tagc(r.st)}">${r.st}</span>`}</td><td>${r.pr?r.h:'-'}</td><td>${r.pr?`<button class="btn sm" onclick="cert(${r.id})">Certificate</button>`:r.st!='rejected'&&e.date>=today&&!e.cancelled?`<button class="btn sm alt" onclick="cancelReg(${r.id})">Cancel</button>`:''}</td></tr>`}).join('')}</table>`:'<p class="empty">No registrations yet. Browse events and register.</p>'}</div>
+ <div class="card"><h3>My profile</h3><label for="pn">Name</label><input id="pn" value="${esc(U.name)}"><label for="pe">Email</label><input id="pe" type="email" value="${esc(U.email||'')}" disabled><label for="pc">City</label><input id="pc" value="${esc(U.city||'')}"><p><button class="btn" onclick="saveProfile()">Save profile</button></p></div></div>
+ <h3 class="sec">Leaderboard</h3><div class="card tw">${board()}</div>`}
+function board(){const vs=[...new Set(S.regs.map(r=>r.vol))].map(v=>[v,hours(v)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+ return `<table><tr><th>Rank</th><th>Volunteer</th><th>Hours</th><th>Badge</th></tr>${vs.map(([v,h],i)=>`<tr${v==U.name?' style="font-weight:700"':''}><td>${i+1}</td><td>${esc(v)}${v==U.name?' (you)':''}</td><td>${h}</td><td><span class="tag ${h>=10?'w':''}">${badge(h)}</span></td></tr>`).join('')}</table>`}
+function saveProfile(){const n=$('#pn').value.trim();if(!n)return toast('Enter your name.');
+ S.regs.forEach(r=>{if(r.vol==U.name)r.vol=n});U={...U,name:n,city:$('#pc').value.trim()};const a=S.accounts.find(x=>x.email==U.email);if(a){a.name=U.name;a.city=U.city}setUser(U);save();header();toast('Profile saved.');render()}
+function cert(id){const r=S.regs.find(r=>r.id==id),e=ev(r.ev),m=document.createElement('div');m.className='modal';m.onclick=x=>{if(x.target==m)m.remove()};
+ m.innerHTML=`<div><div class="cert"><h2>Certificate of Participation</h2><p>This is proudly presented to</p><div class="n">${esc(r.vol)}</div><p>for volunteering <b>${r.h} hours</b> at<br><b>${esc(e.title)}</b><br>on ${fmt(e.date)}</p><p style="color:#5d726d;font-size:14px">Issued by ${esc(ngo(e.ngo).name)} through Sevaa</p></div>
+ <p style="text-align:center"><button class="btn" onclick="print()">Print</button> <button class="btn alt" style="background:#fff" onclick="this.closest('.modal').remove()">Close</button></p></div>`;document.body.appendChild(m)}
+if(U)render();

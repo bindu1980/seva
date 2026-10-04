@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Log in – Sevaa</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Figtree:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/style.css"></head>
+<body><header id="hd"></header><main><div class="card login" id="mainCard">
+<h2 id="ttl">Welcome back</h2><p class="meta" id="sub">Log in to find and join volunteering events.</p>
+<div class="chips"><button class="chip on" id="tl" onclick="mode(false)">Log in</button><button class="chip" id="tr" onclick="mode(true)">Register</button></div>
+<div id="regOnly" hidden><label for="role">I am a</label><select id="role" onchange="roleUi()"><option value="volunteer">Volunteer</option><option value="ngo">NGO / organisation</option></select>
+<label for="name" id="nl">Full name</label><input id="name" autocomplete="name"><label for="city">City</label><input id="city"></div>
+<label for="email">Email</label><input id="email" type="email" autocomplete="email"><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password">
+<p id="err" class="meta" style="color:var(--bad)" role="alert"></p><p><button class="btn" id="go" style="width:100%" onclick="send()">Log in</button></p>
+<p class="meta" id="fgt"><a href="#" onclick="showForgot();return false">Forgot password?</a></p></div>
+<div class="card login" id="fp" hidden><h2>Reset your password</h2>
+<div id="fp1"><p class="meta">Enter your account email and we will send a reset code.</p><label for="fe">Email</label><input id="fe" type="email" autocomplete="email">
+<p id="fm" class="meta" style="color:var(--bad)" role="alert"></p><p><button class="btn" style="width:100%" onclick="sendCode()">Send reset code</button></p></div>
+<div id="fp2" hidden><p class="meta" id="codeNote"></p><label for="fc">Reset code</label><input id="fc" inputmode="numeric" autocomplete="one-time-code">
+<label for="fn">New password</label><input id="fn" type="password" autocomplete="new-password"><p id="fm2" class="meta" style="color:var(--bad)" role="alert"></p>
+<p><button class="btn" style="width:100%" onclick="doReset()">Reset password</button></p></div>
+<p class="meta"><a href="#" onclick="hideForgot();return false">Back to log in</a></p></div></main>
+<script src="js/data.js"></script><script src="js/storage.js"></script><script src="js/auth.js"></script>
+<script>
+const u0=user();if(u0)location.href=u0.role=='volunteer'?'index.html':DASH[u0.role];
+header();let reg=false;
+function mode(r){reg=r;$('#regOnly').hidden=!r;$('#fgt').hidden=r;$('#tl').className='chip'+(r?'':' on');$('#tr').className='chip'+(r?' on':'');
+ $('#ttl').textContent=r?'Create your account':'Welcome back';$('#sub').textContent=r?'Register to join events or list your organisation.':'Log in to find and join volunteering events.';$('#go').textContent=r?'Register':'Log in';$('#err').textContent=''}
+let rc=null;
+function showForgot(){$('#mainCard').hidden=true;$('#fp').hidden=false;$('#fp1').hidden=false;$('#fp2').hidden=true;$('#fm').textContent='';$('#fm2').textContent=''}
+function hideForgot(msg){$('#fp').hidden=true;$('#mainCard').hidden=false;mode(false);if(msg)$('#sub').textContent=msg}
+function sendCode(){const em=$('#fe').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(em))return $('#fm').textContent='Enter a valid email address.';
+ const a=S.accounts.find(x=>x.email==em);rc=a?{email:em,code:String(Math.floor(100000+Math.random()*900000))}:null;
+ $('#fp1').hidden=true;$('#fp2').hidden=false;
+ $('#codeNote').textContent=a?'Demo only: a real system would email this code. Your code is '+rc.code+'.':'If this email is registered, a code has been sent. Enter it below.'}
+function doReset(){if(!rc||$('#fc').value.trim()!=rc.code)return $('#fm2').textContent='That code is not correct.';
+ const e=resetPassword(rc.email,$('#fn').value);if(e)return $('#fm2').textContent=e;rc=null;hideForgot('Password updated. Log in with your new password.')}
+function roleUi(){$('#nl').textContent=$('#role').value=='ngo'?'Organisation name':'Full name'}
+function send(){const e=reg?doRegister({name:$('#name').value,email:$('#email').value,pw:$('#pw').value,role:$('#role').value,city:$('#city').value}):doLogin($('#email').value,$('#pw').value);$('#err').textContent=e}
+document.addEventListener('keydown',k=>{if(k.key=='Enter'&&$('#fp').hidden)send()});
+</script></body></html>
